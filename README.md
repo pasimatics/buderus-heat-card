@@ -12,16 +12,16 @@ Animated all-in-one heating schematic card for Home Assistant: boiler, heating c
 |---|---|
 | ![Idle](images/preview-idle.png) | ![Light theme](images/preview-light.png) |
 
-| Heating element in the tank | Without solar, heating element in the boiler |
+| Heating element in the tank | Without solar thermal |
 |---|---|
-| ![Heating element in the tank](images/preview-heater-tank.png) | ![Without solar, heating element in the boiler](images/preview-no-solar-heater-boiler.png) |
+| ![Heating element in the tank](images/preview-heater-tank.png) | ![Without solar thermal](images/preview-no-solar.png) |
 
 ## Features
 
 - Boiler with live temperature display and animated flame while the burner is on
 - Charging circuit (boiler → upper heat exchanger of the tank)
 - Optional solar circuit (collector → solar pump → lower heat exchanger)
-- Optional electric heating element, either in the DHW tank or in the boiler
+- Optional electric heating element in the DHW tank (e.g. for PV surplus)
 - Heating circuit with pump and radiator, flow actual / target
 - Tank colored by top and bottom temperature
 - Animated flow only while the respective pump is running; idle circuits are greyed out
@@ -73,7 +73,6 @@ The entity IDs above are the EMS-ESP defaults (boiler, RC30/RC35 thermostat, SM1
 | `title` | `Heizungsanlage` | Card title; set to `""` to hide the header |
 | `animation` | `true` | Animated pipe flow |
 | `solar` | auto | Show the solar thermal part. Auto = shown when a solar entity is set; `false` hides it |
-| `heater_location` | `tank` | Position of the optional electric heating element: `tank` or `boiler` |
 | `entities` | – | Entity mapping, see below |
 | `labels` | – | Override value labels, e.g. `labels: { tank_top: "WW oben" }` |
 
@@ -96,12 +95,11 @@ The entity IDs above are the EMS-ESP defaults (boiler, RC30/RC35 thermostat, SM1
 
 Label keys: `outside`, `mode`, `burner`, `charge`, `tank_top`, `tank_bottom`, `collector`, `solar_pump`, `flow`, `heating_pump`, `heater`.
 
-### Example without solar thermal, with heating element in the boiler
+### Example without solar thermal, with heating element in the tank
 
 ```yaml
 type: custom:buderus-heat-card
 solar: false
-heater_location: boiler
 entities:
   burner: binary_sensor.boiler_burngas
   boiler_temp: sensor.boiler_boiltemp

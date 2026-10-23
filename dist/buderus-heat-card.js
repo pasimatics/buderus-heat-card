@@ -50,7 +50,6 @@ class BuderusHeatCard extends HTMLElement {
       animation: config.animation !== false,
       labels: config.labels || {},
       solar: config.solar,
-      heater_location: config.heater_location === "boiler" ? "boiler" : "tank",
       entities: { ...BHC_DEFAULT_ENTITIES, ...(config.entities || {}) },
     };
     this._lastKey = null;
@@ -135,10 +134,9 @@ class BuderusHeatCard extends HTMLElement {
   _heaterSvg(on) {
     const e = this._config.entities;
     const id = e.heater || e.heater_power;
-    const atBoiler = this._config.heater_location === "boiler";
-    const x1 = atBoiler ? 82 : 434;
-    const x2 = atBoiler ? 170 : 512;
-    const y = atBoiler ? 464 : 362;
+    const x1 = 434;
+    const x2 = 512;
+    const y = 362;
     const color = on ? "#f97316" : "var(--bhc-off)";
     return `<g class="click" data-entity="${bhcEsc(id)}">
       <rect x="${x1 - 6}" y="${y - 9}" width="12" height="18" rx="3" fill="var(--bhc-stroke)"/>
@@ -189,7 +187,6 @@ class BuderusHeatCard extends HTMLElement {
     const solarActive = showSolar && this._on("solar_pump");
     const showHeater = this._hasHeater();
     const heaterOn = showHeater && this._heaterOn();
-    const atBoiler = this._config.heater_location === "boiler";
     const top = this._num("tank_top");
     const bottom = this._num("tank_bottom");
     const boilerT = this._num("boiler_temp");
@@ -250,7 +247,7 @@ class BuderusHeatCard extends HTMLElement {
         <path d="M 430 270 C 470 270 470 285 505 285 S 540 300 505 300 S 470 330 430 330" fill="none" stroke="${chargeActive ? "#ef4444" : "var(--bhc-off)"}" stroke-width="6" stroke-linecap="round"/>
         ${showSolar ? `<path d="M 570 395 C 530 395 530 410 495 410 S 460 425 495 425 S 530 445 570 445" fill="none" stroke="${solarActive ? "#f59e0b" : "var(--bhc-off)"}" stroke-width="6" stroke-linecap="round"/>` : ""}
       </g>
-      ${showHeater && !atBoiler ? this._heaterSvg(heaterOn) : ""}
+      ${showHeater ? this._heaterSvg(heaterOn) : ""}
 
       <!-- Kessel -->
       <g class="${e.burner ? "click" : ""}" data-entity="${bhcEsc(e.burner)}">
@@ -260,7 +257,6 @@ class BuderusHeatCard extends HTMLElement {
         <rect x="95" y="340" width="110" height="110" rx="12" fill="#1e293b"/>
         ${flame}
       </g>
-      ${showHeater && atBoiler ? this._heaterSvg(heaterOn) : ""}
 
       <!-- Heizkörper -->
       <g class="${e.flow ? "click" : ""}" data-entity="${bhcEsc(e.flow)}">
@@ -288,7 +284,7 @@ class BuderusHeatCard extends HTMLElement {
       ${showSolar ? this._pill(790, 268, "solar_pump_mod", this._label("solar_pump", "Solarpumpe"), solarActive ? `an · ${this._pct("solar_pump_mod")}` : "aus", { w: 120, active: solarActive, color: solarActive ? "#16a34a" : "var(--bhc-muted)" }) : ""}
       ${this._pill(870, 330, "flow", this._label("flow", "Vorlauf"), `${this._temp("flow")}${this._num("flow_target") !== null ? ` / ${Math.round(this._num("flow_target"))}°` : ""}`, { w: 150, color: this._color(this._num("flow")) })}
       ${this._pill(620, 615, "heating_pump_mod", this._label("heating_pump", "Heizkreispumpe"), heatPump ? `an · ${this._pct("heating_pump_mod")}` : "aus", { w: 140, active: heatPump, color: heatPump ? "#16a34a" : "var(--bhc-muted)" })}
-      ${showHeater ? this._pill(atBoiler ? 150 : 352, atBoiler ? 590 : 365, this._config.entities.heater ? "heater" : "heater_power", this._label("heater", "Heizstab"), heaterOn ? `an${this._power("heater_power") ? " · " + this._power("heater_power") : ""}` : "aus", { w: 128, active: heaterOn, color: heaterOn ? "#ea580c" : "var(--bhc-muted)" }) : ""}
+      ${showHeater ? this._pill(352, 365, this._config.entities.heater ? "heater" : "heater_power", this._label("heater", "Heizstab"), heaterOn ? `an${this._power("heater_power") ? " · " + this._power("heater_power") : ""}` : "aus", { w: 128, active: heaterOn, color: heaterOn ? "#ea580c" : "var(--bhc-muted)" }) : ""}
     </svg>`;
   }
 
