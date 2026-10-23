@@ -16,7 +16,8 @@ Animated all-in-one heating schematic card for Home Assistant: boiler, heating c
 
 - Boiler with live temperature display and animated flame while the burner is on
 - Charging circuit (boiler → upper heat exchanger of the tank)
-- Solar circuit (collector → solar pump → lower heat exchanger)
+- Optional solar circuit (collector → solar pump → lower heat exchanger)
+- Optional electric heating element, either in the DHW tank or in the boiler
 - Heating circuit with pump and radiator, flow actual / target
 - Tank colored by top and bottom temperature
 - Animated flow only while the respective pump is running; idle circuits are greyed out
@@ -67,6 +68,8 @@ The entity IDs above are the EMS-ESP defaults (boiler, RC30/RC35 thermostat, SM1
 |---|---|---|
 | `title` | `Heizungsanlage` | Card title; set to `""` to hide the header |
 | `animation` | `true` | Animated pipe flow |
+| `solar` | auto | Show the solar thermal part. Auto = shown when a solar entity is set; `false` hides it |
+| `heater_location` | `tank` | Position of the optional electric heating element: `tank` or `boiler` |
 | `entities` | – | Entity mapping, see below |
 | `labels` | – | Override value labels, e.g. `labels: { tank_top: "WW oben" }` |
 
@@ -85,8 +88,27 @@ The entity IDs above are the EMS-ESP defaults (boiler, RC30/RC35 thermostat, SM1
 | `tank_top` / `tank_bottom` | tank temperatures | tank color + values |
 | `collector` | collector temperature | value |
 | `solar_pump` / `solar_pump_mod` | solar pump on/off / modulation | solar circuit |
+| `heater` / `heater_power` | electric heating element on/off / power (W) | heating rod + value (optional) |
 
-Label keys: `outside`, `mode`, `burner`, `charge`, `tank_top`, `tank_bottom`, `collector`, `solar_pump`, `flow`, `heating_pump`.
+Label keys: `outside`, `mode`, `burner`, `charge`, `tank_top`, `tank_bottom`, `collector`, `solar_pump`, `flow`, `heating_pump`, `heater`.
+
+### Example without solar thermal, with heating element in the boiler
+
+```yaml
+type: custom:buderus-heat-card
+solar: false
+heater_location: boiler
+entities:
+  burner: binary_sensor.boiler_burngas
+  boiler_temp: sensor.boiler_boiltemp
+  heater: switch.heizstab
+  heater_power: sensor.heizstab_leistung
+  tank_top: sensor.boiler_dhw_curtemp
+  flow: sensor.boiler_curflowtemp
+  heating_pump: binary_sensor.boiler_heatingpump
+```
+
+The heating element is shown as active when `heater` is on, or – if only `heater_power` is set – when the power is above 5 W. Like everything else in this card it is display-only; tapping it opens more-info.
 
 ## Deutsch
 
