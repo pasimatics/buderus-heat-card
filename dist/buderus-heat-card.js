@@ -136,7 +136,7 @@ class BuderusHeatCard extends HTMLElement {
     const id = e.heater || e.heater_power;
     const x1 = 434;
     const x2 = 512;
-    const y = 362;
+    const y = 338;
     const color = on ? "#f97316" : "var(--bhc-off)";
     return `<g class="click" data-entity="${bhcEsc(id)}">
       <rect x="${x1 - 6}" y="${y - 9}" width="12" height="18" rx="3" fill="var(--bhc-stroke)"/>
@@ -218,8 +218,8 @@ class BuderusHeatCard extends HTMLElement {
       ${showSolar ? this._pipe("M 575 445 H 700 V 150 H 760", false, solarActive) : ""}
 
       <!-- Ladekreis: Kessel -> Speicher oben (links) -->
-      ${this._pipe("M 235 270 H 425", true, chargeActive)}
-      ${this._pipe("M 425 330 H 235", false, chargeActive)}
+      ${this._pipe("M 235 220 H 425", true, chargeActive)}
+      ${this._pipe("M 425 280 H 235", false, chargeActive)}
 
       <!-- Heizkreis: Kessel -> Heizkörper -->
       ${this._pipe("M 235 400 H 320 V 540 H 760 V 400 H 790", true, heatPump)}
@@ -243,17 +243,17 @@ class BuderusHeatCard extends HTMLElement {
 
       <!-- Speicher -->
       <g class="${e.tank_top ? "click" : ""}" data-entity="${bhcEsc(e.tank_top)}">
-        <rect x="430" y="110" width="140" height="370" rx="70" fill="url(#bhcTank)" stroke="var(--bhc-stroke)" stroke-width="4"/>
-        <path d="M 430 270 C 470 270 470 285 505 285 S 540 300 505 300 S 470 330 430 330" fill="none" stroke="${chargeActive ? "#ef4444" : "var(--bhc-off)"}" stroke-width="6" stroke-linecap="round"/>
+        <rect x="430" y="100" width="140" height="380" rx="70" fill="url(#bhcTank)" stroke="var(--bhc-stroke)" stroke-width="4"/>
+        <path d="M 430 220 C 470 220 470 235 505 235 S 540 250 505 250 S 470 280 430 280" fill="none" stroke="${chargeActive ? "#ef4444" : "var(--bhc-off)"}" stroke-width="6" stroke-linecap="round"/>
         ${showSolar ? `<path d="M 570 395 C 530 395 530 410 495 410 S 460 425 495 425 S 530 445 570 445" fill="none" stroke="${solarActive ? "#f59e0b" : "var(--bhc-off)"}" stroke-width="6" stroke-linecap="round"/>` : ""}
       </g>
       ${showHeater ? this._heaterSvg(heaterOn) : ""}
 
       <!-- Kessel -->
       <g class="${e.burner ? "click" : ""}" data-entity="${bhcEsc(e.burner)}">
-        <rect x="65" y="230" width="170" height="250" rx="18" fill="url(#bhcMetal)" stroke="var(--bhc-stroke)" stroke-width="4"/>
-        <rect x="88" y="252" width="124" height="54" rx="8" fill="#334155"/>
-        <text x="150" y="286" class="display" style="fill:${this._color(boilerT)}">${bhcEsc(this._temp("boiler_temp"))}</text>
+        <rect x="65" y="185" width="170" height="295" rx="18" fill="url(#bhcMetal)" stroke="var(--bhc-stroke)" stroke-width="4"/>
+        <rect x="88" y="207" width="124" height="54" rx="8" fill="#334155"/>
+        <text x="150" y="241" class="display" style="fill:${this._color(boilerT)}">${bhcEsc(this._temp("boiler_temp"))}</text>
         <rect x="95" y="340" width="110" height="110" rx="12" fill="#1e293b"/>
         ${flame}
       </g>
@@ -269,7 +269,7 @@ class BuderusHeatCard extends HTMLElement {
       </g>
 
       <!-- Pumpen -->
-      ${this._pump(330, 270, "charge_pump", chargeActive, 0)}
+      ${this._pump(330, 220, "charge_pump", chargeActive, 0)}
       ${this._pump(620, 540, "heating_pump", heatPump, 0)}
       ${showSolar ? this._pump(700, 300, "solar_pump", solarActive, -90) : ""}
 
@@ -277,14 +277,14 @@ class BuderusHeatCard extends HTMLElement {
       ${this._pill(110, 70, "outside", this._label("outside", "Außen"), this._temp("outside"), { color: this._color(this._num("outside")) })}
       ${this._pill(255, 70, "mode", this._label("mode", "Heizkreis"), modeTxt || "–", { w: 120 })}
       ${this._pill(150, 530, "burner_power", this._label("burner", "Brenner"), burner ? `an · ${this._pct("burner_power") || ""}` : "aus", { active: burner, color: burner ? "#ea580c" : "var(--bhc-muted)" })}
-      ${this._pill(330, 205, "charge_pump", this._label("charge", "WW-Ladung"), chargeActive ? "aktiv" : "aus", { active: chargeActive, color: chargeActive ? "#16a34a" : "var(--bhc-muted)" })}
+      ${this._pill(330, 155, "charge_pump", this._label("charge", "WW-Ladung"), chargeActive ? "aktiv" : "aus", { active: chargeActive, color: chargeActive ? "#16a34a" : "var(--bhc-muted)" })}
       ${this._pill(500, 62, "tank_top", this._label("tank_top", "Speicher oben"), this._temp("tank_top"), { w: 140, color: this._color(top) })}
       ${this._pill(500, 507, "tank_bottom", this._label("tank_bottom", "Speicher unten"), this._temp("tank_bottom"), { w: 140, color: this._color(bottom) })}
       ${showSolar ? this._pill(820, 215, "collector", this._label("collector", "Kollektor"), this._temp("collector"), { color: this._color(this._num("collector")) }) : ""}
       ${showSolar ? this._pill(790, 268, "solar_pump_mod", this._label("solar_pump", "Solarpumpe"), solarActive ? `an · ${this._pct("solar_pump_mod")}` : "aus", { w: 120, active: solarActive, color: solarActive ? "#16a34a" : "var(--bhc-muted)" }) : ""}
       ${this._pill(870, 330, "flow", this._label("flow", "Vorlauf"), `${this._temp("flow")}${this._num("flow_target") !== null ? ` / ${Math.round(this._num("flow_target"))}°` : ""}`, { w: 150, color: this._color(this._num("flow")) })}
       ${this._pill(620, 615, "heating_pump_mod", this._label("heating_pump", "Heizkreispumpe"), heatPump ? `an · ${this._pct("heating_pump_mod")}` : "aus", { w: 140, active: heatPump, color: heatPump ? "#16a34a" : "var(--bhc-muted)" })}
-      ${showHeater ? this._pill(352, 365, this._config.entities.heater ? "heater" : "heater_power", this._label("heater", "Heizstab"), heaterOn ? `an${this._power("heater_power") ? " · " + this._power("heater_power") : ""}` : "aus", { w: 128, active: heaterOn, color: heaterOn ? "#ea580c" : "var(--bhc-muted)" }) : ""}
+      ${showHeater ? this._pill(352, 338, this._config.entities.heater ? "heater" : "heater_power", this._label("heater", "Heizstab"), heaterOn ? `an${this._power("heater_power") ? " · " + this._power("heater_power") : ""}` : "aus", { w: 128, active: heaterOn, color: heaterOn ? "#ea580c" : "var(--bhc-muted)" }) : ""}
     </svg>`;
   }
 
