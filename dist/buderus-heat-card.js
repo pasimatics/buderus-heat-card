@@ -2,7 +2,7 @@
  * Buderus Heat Card – kombiniertes Anlagenschema (Kessel, Heizkreis, Speicher, Solarthermie)
  * Reine Anzeige-Karte: Antippen öffnet nur das More-Info-Fenster, es werden keine Dienste aufgerufen.
  */
-const BHC_VERSION = "0.2.0";
+const BHC_VERSION = "0.2.1";
 
 const BHC_DEFAULT_ENTITIES = {
   outside: "",
@@ -186,6 +186,8 @@ class BuderusHeatCard extends HTMLElement {
     const showSolar = this._hasSolar();
     const solarActive = showSolar && this._on("solar_pump");
     const showHeater = this._hasHeater();
+    // Ohne laufende Heizkreispumpe zeigt der Kesselvorlauf nicht die Heizkreis-Temperatur (z. B. bei WW-Vorrang)
+    const circuitIdle = Boolean(e.heating_pump) && !heatPump;
     const heaterOn = showHeater && this._heaterOn();
     const top = this._num("tank_top");
     const bottom = this._num("tank_bottom");
@@ -282,7 +284,9 @@ class BuderusHeatCard extends HTMLElement {
       ${this._pill(500, 507, "tank_bottom", this._label("tank_bottom", "Speicher unten"), this._temp("tank_bottom"), { w: 140, color: this._color(bottom) })}
       ${showSolar ? this._pill(820, 215, "collector", this._label("collector", "Kollektor"), this._temp("collector"), { color: this._color(this._num("collector")) }) : ""}
       ${showSolar ? this._pill(790, 268, "solar_pump_mod", this._label("solar_pump", "Solarpumpe"), solarActive ? `an · ${this._pct("solar_pump_mod")}` : "aus", { w: 120, active: solarActive, color: solarActive ? "#16a34a" : "var(--bhc-muted)" }) : ""}
-      ${this._pill(870, 330, "flow", this._label("flow", "Vorlauf"), `${this._temp("flow")}${this._num("flow_target") !== null ? ` / ${Math.round(this._num("flow_target"))}°` : ""}`, { w: 150, color: this._color(this._num("flow")) })}
+      ${circuitIdle
+        ? this._pill(870, 330, "flow", this._label("circuit", "Heizkreis"), chargeActive ? "WW-Vorrang" : "aus", { w: 150, color: "var(--bhc-muted)" })
+        : this._pill(870, 330, "flow", this._label("flow", "Vorlauf"), `${this._temp("flow")}${this._num("flow_target") !== null ? ` / ${Math.round(this._num("flow_target"))}°` : ""}`, { w: 150, color: this._color(this._num("flow")) })}
       ${this._pill(620, 615, "heating_pump_mod", this._label("heating_pump", "Heizkreispumpe"), heatPump ? `an · ${this._pct("heating_pump_mod")}` : "aus", { w: 140, active: heatPump, color: heatPump ? "#16a34a" : "var(--bhc-muted)" })}
       ${showHeater ? this._pill(352, 338, this._config.entities.heater ? "heater" : "heater_power", this._label("heater", "Heizstab"), heaterOn ? `an${this._power("heater_power") ? " · " + this._power("heater_power") : ""}` : "aus", { w: 128, active: heaterOn, color: heaterOn ? "#ea580c" : "var(--bhc-muted)" }) : ""}
     </svg>`;

@@ -85,7 +85,7 @@ The entity IDs above are the EMS-ESP defaults (boiler, RC30/RC35 thermostat, SM1
 | `boiler_temp` | boiler temperature | boiler display |
 | `burner` | burner / flame (on/off) | flame + status |
 | `burner_power` | burner modulation (%) | burner value |
-| `flow` / `flow_target` | flow temperature actual / target | radiator value |
+| `flow` / `flow_target` | flow temperature actual / target | radiator value (only while the heating pump runs; otherwise "aus" or "WW-Vorrang" during DHW charging) |
 | `heating_pump` / `heating_pump_mod` | heating pump on/off / modulation | pump + value |
 | `charge_pump` / `dhw_charging` | DHW charge pump / charging active | charging circuit |
 | `tank_top` / `tank_bottom` | tank temperatures | tank color + values |
@@ -93,7 +93,7 @@ The entity IDs above are the EMS-ESP defaults (boiler, RC30/RC35 thermostat, SM1
 | `solar_pump` / `solar_pump_mod` | solar pump on/off / modulation | solar circuit |
 | `heater` / `heater_power` | electric heating element on/off / power (W) | heating rod + value (optional) |
 
-Label keys: `outside`, `mode`, `burner`, `charge`, `tank_top`, `tank_bottom`, `collector`, `solar_pump`, `flow`, `heating_pump`, `heater`.
+Label keys: `outside`, `mode`, `burner`, `charge`, `tank_top`, `tank_bottom`, `collector`, `solar_pump`, `flow`, `circuit`, `heating_pump`, `heater`.
 
 ### Example without solar thermal, with heating element in the tank
 
