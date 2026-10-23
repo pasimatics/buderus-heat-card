@@ -6,11 +6,15 @@ Animated all-in-one heating schematic card for Home Assistant: boiler, heating c
 
 ![Active](images/preview-active.png)
 
-<details>
-<summary>Idle state</summary>
+## Examples
 
-![Idle](images/preview-idle.png)
-</details>
+| Idle | Light theme |
+|---|---|
+| ![Idle](images/preview-idle.png) | ![Light theme](images/preview-light.png) |
+
+| Heating element in the tank | Without solar, heating element in the boiler |
+|---|---|
+| ![Heating element in the tank](images/preview-heater-tank.png) | ![Without solar, heating element in the boiler](images/preview-no-solar-heater-boiler.png) |
 
 ## Features
 
