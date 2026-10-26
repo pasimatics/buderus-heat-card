@@ -2,7 +2,7 @@
  * Buderus Heat Card – kombiniertes Anlagenschema (Kessel, Heizkreis, Speicher, Solarthermie)
  * Reine Anzeige-Karte: Antippen öffnet nur das More-Info-Fenster, es werden keine Dienste aufgerufen.
  */
-const BHC_VERSION = "0.2.1";
+const BHC_VERSION = "0.3.0";
 
 const BHC_DEFAULT_ENTITIES = {
   outside: "",
@@ -37,6 +37,10 @@ class BuderusHeatCard extends HTMLElement {
     super();
     this.attachShadow({ mode: "open" });
     this._lastKey = null;
+  }
+
+  static getConfigElement() {
+    return document.createElement("buderus-heat-card-editor");
   }
 
   static getStubConfig() {
@@ -365,6 +369,205 @@ class BuderusHeatCard extends HTMLElement {
   }
 }
 
+/* ---------- visueller Editor ---------- */
+const BHC_ONOFF_DOMAINS = ["binary_sensor", "switch", "sensor", "input_boolean"];
+const BHC_NUM_DOMAINS = ["sensor", "input_number"];
+
+// [key, domains, de, en]
+const BHC_EDITOR_SECTIONS = [
+  {
+    id: "boiler", icon: "mdi:water-boiler", de: "Kessel & Brenner", en: "Boiler & burner",
+    entities: [
+      ["boiler_temp", BHC_NUM_DOMAINS, "Kesseltemperatur", "Boiler temperature"],
+      ["burner", BHC_ONOFF_DOMAINS, "Brenner / Flamme (an/aus)", "Burner / flame (on/off)"],
+      ["burner_power", BHC_NUM_DOMAINS, "Brennerleistung (%)", "Burner modulation (%)"],
+      ["outside", BHC_NUM_DOMAINS, "Außentemperatur", "Outdoor temperature"],
+    ],
+  },
+  {
+    id: "circuit", icon: "mdi:radiator", de: "Heizkreis", en: "Heating circuit",
+    entities: [
+      ["flow", BHC_NUM_DOMAINS, "Vorlauf Ist", "Flow temperature"],
+      ["flow_target", BHC_NUM_DOMAINS, "Vorlauf Soll", "Flow target"],
+      ["heating_pump", BHC_ONOFF_DOMAINS, "Heizkreispumpe (an/aus)", "Heating pump (on/off)"],
+      ["heating_pump_mod", BHC_NUM_DOMAINS, "Heizkreispumpe Modulation (%)", "Heating pump modulation (%)"],
+      ["mode", ["sensor", "select", "input_select"], "Betriebsart (Tag/Nacht)", "Mode (day/night)"],
+    ],
+  },
+  {
+    id: "dhw", icon: "mdi:water-thermometer", de: "Warmwasser", en: "Hot water",
+    entities: [
+      ["tank_top", BHC_NUM_DOMAINS, "Speicher oben", "Tank top"],
+      ["tank_bottom", BHC_NUM_DOMAINS, "Speicher unten", "Tank bottom"],
+      ["charge_pump", BHC_ONOFF_DOMAINS, "Speicherladepumpe (an/aus)", "Charge pump (on/off)"],
+      ["dhw_charging", BHC_ONOFF_DOMAINS, "WW-Ladung aktiv", "DHW charging active"],
+    ],
+  },
+  {
+    id: "solar", icon: "mdi:solar-panel", de: "Solarthermie", en: "Solar thermal",
+    entities: [
+      ["collector", BHC_NUM_DOMAINS, "Kollektortemperatur", "Collector temperature"],
+      ["solar_pump", BHC_ONOFF_DOMAINS, "Solarpumpe (an/aus)", "Solar pump (on/off)"],
+      ["solar_pump_mod", BHC_NUM_DOMAINS, "Solarpumpe Modulation (%)", "Solar pump modulation (%)"],
+    ],
+  },
+  {
+    id: "heater", icon: "mdi:heating-coil", de: "Heizstab im Speicher", en: "Heating element in tank",
+    entities: [
+      ["heater", BHC_ONOFF_DOMAINS, "Heizstab (an/aus)", "Heating element (on/off)"],
+      ["heater_power", BHC_NUM_DOMAINS, "Heizstab Leistung (W)", "Heating element power (W)"],
+    ],
+  },
+];
+
+// [key, Standardtext]
+const BHC_LABEL_KEYS = [
+  ["outside", "Außen"], ["mode", "Heizkreis"], ["burner", "Brenner"], ["charge", "WW-Ladung"],
+  ["tank_top", "Speicher oben"], ["tank_bottom", "Speicher unten"], ["collector", "Kollektor"],
+  ["solar_pump", "Solarpumpe"], ["flow", "Vorlauf"], ["circuit", "Heizkreis"],
+  ["heating_pump", "Heizkreispumpe"], ["heater", "Heizstab"],
+];
+
+class BuderusHeatCardEditor extends HTMLElement {
+  setConfig(config) {
+    this._config = { ...(config || {}) };
+    this._render();
+  }
+
+  set hass(hass) {
+    this._hass = hass;
+    if (this._form) this._form.hass = hass;
+    else this._render();
+  }
+
+  _de() {
+    const lang = (this._hass && (this._hass.locale?.language || this._hass.language)) || "de";
+    return lang.startsWith("de");
+  }
+
+  _schema() {
+    const de = this._de();
+    const general = {
+      type: "grid",
+      name: "",
+      schema: [
+        { name: "title", selector: { text: {} } },
+        {
+          name: "solar",
+          selector: {
+            select: {
+              mode: "dropdown",
+              options: [
+                { value: "auto", label: de ? "Automatisch" : "Automatic" },
+                { value: "on", label: de ? "Immer anzeigen" : "Always show" },
+                { value: "off", label: de ? "Ausblenden" : "Hide" },
+              ],
+            },
+          },
+        },
+        { name: "animation", selector: { boolean: {} } },
+      ],
+    };
+    const sections = BHC_EDITOR_SECTIONS.map((sec) => ({
+      type: "expandable",
+      name: "",
+      title: de ? sec.de : sec.en,
+      icon: sec.icon,
+      expanded: sec.id === "boiler",
+      schema: sec.entities.map(([key, domains]) => ({ name: key, selector: { entity: { filter: { domain: domains } } } })),
+    }));
+    const labels = {
+      type: "expandable",
+      name: "",
+      title: de ? "Beschriftungen" : "Labels",
+      icon: "mdi:label-outline",
+      schema: [{ type: "grid", name: "", schema: BHC_LABEL_KEYS.map(([key]) => ({ name: `label_${key}`, selector: { text: {} } })) }],
+    };
+    return [general, ...sections, labels];
+  }
+
+  _computeLabel(item) {
+    const de = this._de();
+    if (item.name === "title") return de ? "Titel (leer = keine Kopfzeile)" : "Title (empty = no header)";
+    if (item.name === "solar") return de ? "Solarthermie anzeigen" : "Show solar thermal";
+    if (item.name === "animation") return de ? "Animierte Rohrströmung" : "Animated pipe flow";
+    if (item.name.startsWith("label_")) {
+      const entry = BHC_LABEL_KEYS.find(([key]) => `label_${key}` === item.name);
+      return entry ? `${entry[0]} (${de ? "Standard" : "default"}: ${entry[1]})` : item.name;
+    }
+    for (const sec of BHC_EDITOR_SECTIONS) {
+      const entry = sec.entities.find(([key]) => key === item.name);
+      if (entry) return de ? entry[2] : entry[3];
+    }
+    return item.name;
+  }
+
+  // Konfiguration -> flache Formulardaten
+  _data() {
+    const c = this._config;
+    const data = {
+      title: c.title ?? "Heizungsanlage",
+      animation: c.animation !== false,
+      solar: c.solar === true ? "on" : c.solar === false ? "off" : "auto",
+    };
+    const ents = c.entities || {};
+    for (const sec of BHC_EDITOR_SECTIONS) for (const [key] of sec.entities) if (ents[key]) data[key] = ents[key];
+    const labels = c.labels || {};
+    for (const [key] of BHC_LABEL_KEYS) if (labels[key]) data[`label_${key}`] = labels[key];
+    return data;
+  }
+
+  // flache Formulardaten -> Konfiguration (unbekannte Schlüssel bleiben erhalten)
+  _toConfig(data) {
+    const config = { ...this._config };
+    config.title = data.title ?? "";
+    if (data.animation === false) config.animation = false;
+    else delete config.animation;
+    if (data.solar === "on") config.solar = true;
+    else if (data.solar === "off") config.solar = false;
+    else delete config.solar;
+
+    const entities = {};
+    for (const [key, value] of Object.entries(this._config.entities || {})) if (value) entities[key] = value;
+    for (const sec of BHC_EDITOR_SECTIONS)
+      for (const [key] of sec.entities) {
+        if (data[key]) entities[key] = data[key];
+        else delete entities[key];
+      }
+    config.entities = entities;
+
+    const labels = { ...(this._config.labels || {}) };
+    for (const [key] of BHC_LABEL_KEYS) {
+      const v = data[`label_${key}`];
+      if (v) labels[key] = v;
+      else delete labels[key];
+    }
+    if (Object.keys(labels).length) config.labels = labels;
+    else delete config.labels;
+    return config;
+  }
+
+  _render() {
+    if (!this._config) return;
+    if (!this._form) {
+      this._form = document.createElement("ha-form");
+      this._form.computeLabel = (item) => this._computeLabel(item);
+      this._form.addEventListener("value-changed", (ev) => {
+        ev.stopPropagation();
+        this._config = this._toConfig(ev.detail.value);
+        this._form.data = this._data();
+        this.dispatchEvent(new CustomEvent("config-changed", { detail: { config: this._config }, bubbles: true, composed: true }));
+      });
+      this.appendChild(this._form);
+    }
+    if (this._hass) this._form.hass = this._hass;
+    this._form.schema = this._schema();
+    this._form.data = this._data();
+  }
+}
+
+if (!customElements.get("buderus-heat-card-editor")) customElements.define("buderus-heat-card-editor", BuderusHeatCardEditor);
+
 if (!customElements.get("buderus-heat-card")) customElements.define("buderus-heat-card", BuderusHeatCard);
 window.customCards = window.customCards || [];
 if (!window.customCards.some((c) => c.type === "buderus-heat-card")) {
@@ -372,6 +575,7 @@ if (!window.customCards.some((c) => c.type === "buderus-heat-card")) {
     type: "buderus-heat-card",
     name: "Buderus Heat Card",
     description: "Kombiniertes Anlagenschema: Kessel, Heizkreis, Speicher und Solarthermie (nur Anzeige).",
+    preview: true,
   });
 }
 console.info(`%c BUDERUS-HEAT-CARD %c v${BHC_VERSION} `, "color:#fff;background:#ea580c;font-weight:700", "color:#ea580c;background:#fff;font-weight:700");

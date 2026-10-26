@@ -25,6 +25,7 @@ Animated all-in-one heating schematic card for Home Assistant: boiler, heating c
 - Heating circuit with pump and radiator, flow actual / target
 - Tank colored by top and bottom temperature
 - Animated flow only while the respective pump is running; idle circuits are greyed out
+- Visual editor in the dashboard UI, no YAML required
 - Follows the Home Assistant light and dark theme, respects `prefers-reduced-motion`
 
 ## Installation
@@ -41,6 +42,8 @@ Animated all-in-one heating schematic card for Home Assistant: boiler, heating c
 2. Add the resource `/local/buderus-heat-card/buderus-heat-card.js` (type: JavaScript module)
 
 ## Configuration
+
+The card has a **visual editor**: add it via *Add card → Buderus Heat Card* and pick the entities per section (boiler & burner, heating circuit, hot water, solar thermal, heating element), set the title, solar visibility and animation, and optionally override the labels. Everything can also be configured in YAML:
 
 ```yaml
 type: custom:buderus-heat-card
@@ -114,4 +117,4 @@ The heating element is shown as active when `heater` is on, or – if only `heat
 
 ## Deutsch
 
-Animierte Home-Assistant-Karte mit dem Gesamtschema der Heizungsanlage: Kessel, Heizkreis, Warmwasserspeicher und Solarthermie in einer Ansicht. Gedacht für Buderus/Bosch-Anlagen über EMS-ESP. Die Karte ist eine reine Anzeige: Antippen öffnet nur das Info-Fenster, es werden keine Dienste aufgerufen.
+Animierte Home-Assistant-Karte mit dem Gesamtschema der Heizungsanlage: Kessel, Heizkreis, Warmwasserspeicher und Solarthermie in einer Ansicht. Gedacht für Buderus/Bosch-Anlagen über EMS-ESP. Die Karte lässt sich komplett über den visuellen Editor einrichten. Die Karte ist eine reine Anzeige: Antippen öffnet nur das Info-Fenster, es werden keine Dienste aufgerufen.
